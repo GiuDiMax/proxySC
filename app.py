@@ -1,6 +1,6 @@
 import requests
 from dnslib import DNSRecord
-from flask import Flask, redirect
+from flask import Flask, redirect, Response
 from scuapi import API
 app = Flask(__name__)
 
@@ -28,15 +28,28 @@ def go(item_id):
     if not host:
         return "Errore nella risoluzione dell'host", 500
 
-    #item_id = getId(host, item_id)
     if item_id == 0:
         return "Errore nella ricezione dell'id", 500
 
     sc = API(f"{host}/it")
     iframe, m3u_playlist_url = sc.get_links(item_id)
 
-    print("Redirect a:", m3u_playlist_url)
-    return redirect(m3u_playlist_url, code=302)
+    try:
+        proxied_response = requests.get(m3u_playlist_url, timeout=10)
+    except requests.RequestException as e:
+        return f"Errore nella richiesta: {e}", 500
+
+    # Costruisci la risposta copiando corpo e headers rilevanti
+    headers = {
+        "Content-Type": proxied_response.headers.get("Content-Type", "application/octet-stream")
+    }
+
+    if "Content-Length" in proxied_response.headers:
+        headers["Content-Length"] = proxied_response.headers["Content-Length"]
+    if "Content-Disposition" in proxied_response.headers:
+        headers["Content-Disposition"] = proxied_response.headers["Content-Disposition"]
+
+    return Response(proxied_response.content, status=proxied_response.status_code, headers=headers)
 
 # Esempio d'uso
 if __name__ == "__main__":
@@ -44,4 +57,5 @@ if __name__ == "__main__":
     #iframe, m3u_playlist_url = sc.get_links(10739)
     #print(m3u_playlist_url)
     #10739 dragon trainer
+    #http://127.0.0.1:5000/movie/10739
     app.run(host="0.0.0.0", port=5000)
