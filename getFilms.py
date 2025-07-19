@@ -1,4 +1,4 @@
-from main import get_hostname
+from app import get_hostname
 import requests
 import json
 import html
