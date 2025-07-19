@@ -33,6 +33,7 @@ def go(item_id):
 
     sc = API(f"{host}/it")
     iframe, m3u_playlist_url = sc.get_links(item_id)
+    #print(m3u_playlist_url)
 
     try:
         proxied_response = requests.get(m3u_playlist_url, timeout=10)
