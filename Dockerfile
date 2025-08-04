@@ -23,5 +23,5 @@ COPY . .
 # Espone la porta su cui gira Flask
 EXPOSE 5000
 
-# Comando per lanciare l'app Flask con il built-in server (per dev)
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--app=app"]
+# Comando per avviare Flask con il modulo flask, specificando il file direct.py come app
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--app=direct"]
