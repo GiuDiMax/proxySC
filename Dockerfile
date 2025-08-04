@@ -20,8 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia tutto il codice sorgente
 COPY . .
 
-# Espone la porta su cui gira Uvicorn
+# Espone la porta su cui gira Flask
 EXPOSE 5000
 
-# Comando per lanciare FastAPI con Uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
+# Comando per lanciare l'app Flask con il built-in server (per dev)
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--app=app"]
