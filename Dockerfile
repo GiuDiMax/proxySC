@@ -3,7 +3,8 @@ FROM python:3.11-slim
 
 # Evita input interattivi durante installazione
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=direct.py
 
 # Aggiorna pip e installa dipendenze di sistema minime
 RUN apt-get update && apt-get install -y build-essential curl && \
@@ -24,4 +25,4 @@ COPY . .
 EXPOSE 5000
 
 # Comando per avviare Flask con il modulo flask, specificando il file direct.py come app
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--app=direct"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
