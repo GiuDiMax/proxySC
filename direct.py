@@ -1,7 +1,8 @@
 import requests
 from dnslib import DNSRecord
-from flask import Flask, redirect, Response
+from flask import Flask, redirect, Response, request
 from scuapi import API
+import m3u8
 app = Flask(__name__)
 
 def get_hostname():
@@ -39,23 +40,66 @@ def goMovie(item_id):
     host = get_hostname()
     if not host:
         return "Errore nella risoluzione dell'host", 500
-    #item_id = getId(host, item_id)
+
     if item_id == 0:
         return "Errore nella ricezione dell'id", 500
+
     sc = API(f"{host}/it")
     iframe, m3u_playlist_url = sc.get_links(item_id)
+
     try:
-        proxied_response = requests.get(m3u_playlist_url, timeout=10)
+        response = requests.get(m3u_playlist_url, timeout=10)
+        response.raise_for_status()
     except requests.RequestException as e:
         return f"Errore nella richiesta: {e}", 500
+
+    # Se ?max=1 allora filtriamo solo la qualità massima
+    if request.args.get("max") == "1":
+        master_playlist = m3u8.loads(response.text)
+
+        if not master_playlist.playlists:
+            return "Nessun flusso disponibile nella playlist", 500
+
+        # Trova la variante con la banda massima
+        best_stream = max(master_playlist.playlists, key=lambda p: p.stream_info.bandwidth)
+
+        # Costruisci una nuova playlist testuale manualmente
+        lines = ['#EXTM3U']
+
+        # Mantieni le linee EXT-X-MEDIA (audio e sottotitoli)
+        for media in master_playlist.media:
+            attrs = [
+                f'URI="{media.uri}"',
+                f'TYPE={media.type}',
+                f'GROUP-ID="{media.group_id}"',
+                f'LANGUAGE="{media.language}"',
+                f'NAME="{media.name}"',
+                f'DEFAULT={"YES" if media.default else "NO"}',
+                f'AUTOSELECT={"YES" if media.autoselect else "NO"}',
+                f'FORCED={"YES" if media.forced else "NO"}',
+            ]
+            lines.append(f'#EXT-X-MEDIA:{",".join(attrs)}')
+
+        # Aggiungi solo il flusso video con la qualità massima
+        info = best_stream.stream_info
+        attrs = [
+            f'BANDWIDTH={info.bandwidth}',
+            f'CODECS="{info.codecs}"' if info.codecs else '',
+            f'RESOLUTION={info.resolution[0]}x{info.resolution[1]}' if info.resolution else '',
+            f'AUDIO="{info.audio}"' if info.audio else '',
+            f'SUBTITLES="{info.subtitles}"' if info.subtitles else '',
+        ]
+        attrs_str = ",".join(filter(None, attrs))
+        lines.append(f'#EXT-X-STREAM-INF:{attrs_str}')
+        lines.append(best_stream.uri)
+
+        playlist_str = '\n'.join(lines)
+        return Response(playlist_str, mimetype="application/vnd.apple.mpegurl")
+
     headers = {
-        "Content-Type": proxied_response.headers.get("Content-Type", "application/octet-stream")
+        "Content-Type": response.headers.get("Content-Type", "application/vnd.apple.mpegurl")
     }
-    if "Content-Length" in proxied_response.headers:
-        headers["Content-Length"] = proxied_response.headers["Content-Length"]
-    if "Content-Disposition" in proxied_response.headers:
-        headers["Content-Disposition"] = proxied_response.headers["Content-Disposition"]
-    return Response(proxied_response.content, status=proxied_response.status_code, headers=headers)
+    return Response(response.content, status=response.status_code, headers=headers)
 
 @app.route("/serie/<int:item_id>/<int:episode_id>")
 def goSerie(item_id, episode_id):
