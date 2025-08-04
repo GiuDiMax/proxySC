@@ -1,4 +1,4 @@
 flask
 requests
 dnslib
-streamingcommunity-unofficialapi~=3.0.1
+streamingcommunity-unofficialapi
