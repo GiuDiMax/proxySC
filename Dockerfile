@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # Evita input interattivi durante installazione
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    FLASK_APP=direct.py
+    FLASK_APP=xflask.py
 
 # Aggiorna pip e installa dipendenze di sistema minime
 RUN apt-get update && apt-get install -y build-essential curl && \

@@ -40,33 +40,23 @@ def goMovie(item_id):
     host = get_hostname()
     if not host:
         return "Errore nella risoluzione dell'host", 500
-
     if item_id == 0:
         return "Errore nella ricezione dell'id", 500
-
     sc = API(f"{host}/it")
     iframe, m3u_playlist_url = sc.get_links(item_id)
-
+    print(m3u_playlist_url)
     try:
         response = requests.get(m3u_playlist_url, timeout=10)
         response.raise_for_status()
     except requests.RequestException as e:
         return f"Errore nella richiesta: {e}", 500
 
-    # Se ?max=1 allora filtriamo solo la qualità massima
     if request.args.get("max") == "1":
         master_playlist = m3u8.loads(response.text)
-
         if not master_playlist.playlists:
             return "Nessun flusso disponibile nella playlist", 500
-
-        # Trova la variante con la banda massima
         best_stream = max(master_playlist.playlists, key=lambda p: p.stream_info.bandwidth)
-
-        # Costruisci una nuova playlist testuale manualmente
         lines = ['#EXTM3U']
-
-        # Mantieni le linee EXT-X-MEDIA (audio e sottotitoli)
         for media in master_playlist.media:
             attrs = [
                 f'URI="{media.uri}"',
@@ -80,7 +70,6 @@ def goMovie(item_id):
             ]
             lines.append(f'#EXT-X-MEDIA:{",".join(attrs)}')
 
-        # Aggiungi solo il flusso video con la qualità massima
         info = best_stream.stream_info
         attrs = [
             f'BANDWIDTH={info.bandwidth}',
@@ -129,6 +118,6 @@ if __name__ == "__main__":
     #iframe, m3u_playlist_url = sc.get_links(10739)
     #print(m3u_playlist_url)
     #10739 dragon trainer
-    #http://127.0.0.1:5000/movie/10739
+    #http://127.0.0.1:5000/movie/10810
     #http://127.0.0.1:5000/serie/5334/34065
     app.run(host="0.0.0.0", port=5000)
