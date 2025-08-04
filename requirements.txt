@@ -1,4 +1,4 @@
-requests~=2.32.4
-dnslib~=0.9.26
-Flask~=3.1.1
+flask
+requests
+dnslib
 streamingcommunity-unofficialapi~=3.0.1
