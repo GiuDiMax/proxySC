@@ -6,7 +6,6 @@ from dnslib import DNSRecord
 from scuapi import API
 
 app = Flask(__name__)
-
 DNS_QUERY_URL = "https://cloudflare-dns.com/dns-query"
 DNS_QUERY_PARAM = "AAABAAABAAAAAAAAE3N0cmVhbWluZ2NvbW11bml0eXoFYm9hdHMAABwAAQ"
 
@@ -68,10 +67,8 @@ def fetch_playlist(item_id, episode_id=None):
     host = get_hostname()
     if not host:
         return None, "Errore nella risoluzione dell'host"
-
     if not item_id:
         return None, "ID non valido"
-
     sc = API(f"{host}/it")
     try:
         iframe, m3u_playlist_url = sc.get_links(item_id, episode_id=episode_id)
@@ -99,19 +96,6 @@ def go_serie(item_id, episode_id):
         return error, 500
     return Response(playlist, content_type="application/vnd.apple.mpegurl")
 
-@app.route("/redirect/movie/<int:item_id>")
-def redirect_movie(item_id):
-    host = get_hostname()
-    if not host:
-        return "Errore nella risoluzione dell'host", 500
-    if not item_id:
-        return "ID non valido", 400
-    sc = API(f"{host}/it")
-    try:
-        iframe, m3u_playlist_url = sc.get_links(item_id)
-        return redirect(m3u_playlist_url)
-    except Exception as e:
-        return f"Errore nel redirect: {e}", 500
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+    #http://127.0.0.1:5000/movie/10739
