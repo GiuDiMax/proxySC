@@ -4,8 +4,10 @@ from urllib.parse import quote, urlparse, urljoin
 from flask import Flask, redirect, Response, request, jsonify
 from dnslib import DNSRecord
 from scuapi import API
+from flask_cors import CORS
 import m3u8
 app = Flask(__name__)
+CORS(app)
 DNS_QUERY_URL = "https://cloudflare-dns.com/dns-query"
 DNS_QUERY_PARAM = "AAABAAABAAAAAAAAE3N0cmVhbWluZ2NvbW11bml0eXoFYm9hdHMAABwAAQ"
 
