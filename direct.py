@@ -6,6 +6,7 @@ import m3u8
 app = Flask(__name__)
 
 def get_hostname():
+    return "https://streamingunity.co/"
     url = "https://cloudflare-dns.com/dns-query"
     headers = {
         "accept": "application/dns-message"
